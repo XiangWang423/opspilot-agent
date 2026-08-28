@@ -1,0 +1,236 @@
+{
+  "incidents": [
+    {
+      "incident_id": "inc-001",
+      "service": "checkout-api",
+      "started_at": "2026-08-25T12:00:00Z",
+      "alert": "Checkout p95 latency exceeded 2 seconds and the error rate reached 18%.",
+      "severity": "SEV-2",
+      "ground_truth": {
+        "category": "resource_exhaustion",
+        "root_cause": "The checkout-api database connection pool was exhausted after version 1.8.0 reduced the pool capacity from 40 to 20.",
+        "supporting_evidence": [
+          "log-checkout-pool-timeout",
+          "metric-checkout-pool-capacity",
+          "deploy-checkout-180"
+        ]
+      }
+    },
+    {
+      "incident_id": "inc-002",
+      "service": "payment-api",
+      "started_at": "2026-08-25T13:30:00Z",
+      "alert": "Payment authorization timeouts exceeded the five-minute error budget.",
+      "severity": "SEV-2",
+      "ground_truth": {
+        "category": "downstream_dependency",
+        "root_cause": "fraud-api response latency caused payment-api authorization requests to time out.",
+        "supporting_evidence": [
+          "log-payment-fraud-timeout",
+          "metric-fraud-latency"
+        ]
+      }
+    },
+    {
+      "incident_id": "inc-003",
+      "service": "auth-api",
+      "started_at": "2026-08-25T15:10:00Z",
+      "alert": "Login failures rose from 1% to 64% immediately after an auth-api deployment.",
+      "severity": "SEV-1",
+      "ground_truth": {
+        "category": "configuration_regression",
+        "root_cause": "Version 3.4.2 configured the production JWT issuer with the staging issuer URL.",
+        "supporting_evidence": [
+          "log-auth-invalid-issuer",
+          "metric-auth-login-failure",
+          "deploy-auth-342"
+        ]
+      }
+    }
+  ],
+  "logs": [
+    {
+      "incident_id": "inc-001",
+      "timestamp": "2026-08-25T12:04:12Z",
+      "service": "checkout-api",
+      "level": "ERROR",
+      "message": "database connection acquisition timed out after 500 ms; pool exhausted active=20 capacity=20",
+      "trace_id": "trace-checkout-004"
+    },
+    {
+      "incident_id": "inc-001",
+      "timestamp": "2026-08-25T12:03:40Z",
+      "service": "checkout-api",
+      "level": "WARN",
+      "message": "request queue depth exceeded 180 while waiting for database connections",
+      "trace_id": "trace-checkout-003"
+    },
+    {
+      "incident_id": "inc-001",
+      "timestamp": "2026-08-25T12:02:05Z",
+      "service": "inventory-api",
+      "level": "INFO",
+      "message": "inventory reservation completed in 42 ms",
+      "trace_id": "trace-checkout-002"
+    },
+    {
+      "incident_id": "inc-002",
+      "timestamp": "2026-08-25T13:34:18Z",
+      "service": "payment-api",
+      "level": "ERROR",
+      "message": "fraud-api authorization request exceeded the 1500 ms deadline",
+      "trace_id": "trace-payment-004"
+    },
+    {
+      "incident_id": "inc-002",
+      "timestamp": "2026-08-25T13:33:11Z",
+      "service": "fraud-api",
+      "level": "WARN",
+      "message": "risk model feature lookup latency reached 2200 ms",
+      "trace_id": "trace-payment-003"
+    },
+    {
+      "incident_id": "inc-003",
+      "timestamp": "2026-08-25T15:12:45Z",
+      "service": "auth-api",
+      "level": "ERROR",
+      "message": "JWT validation failed: invalid issuer https://staging.identity.example",
+      "trace_id": "trace-auth-004"
+    },
+    {
+      "incident_id": "inc-003",
+      "timestamp": "2026-08-25T15:11:02Z",
+      "service": "auth-api",
+      "level": "INFO",
+      "message": "auth-api version 3.4.2 is accepting traffic",
+      "trace_id": null
+    }
+  ],
+  "metrics": [
+    {
+      "incident_id": "inc-001",
+      "timestamp": "2026-08-25T12:00:00Z",
+      "service": "checkout-api",
+      "metric": "db_pool_in_use",
+      "value": 18,
+      "unit": "connections"
+    },
+    {
+      "incident_id": "inc-001",
+      "timestamp": "2026-08-25T12:04:00Z",
+      "service": "checkout-api",
+      "metric": "db_pool_in_use",
+      "value": 20,
+      "unit": "connections"
+    },
+    {
+      "incident_id": "inc-001",
+      "timestamp": "2026-08-25T12:04:00Z",
+      "service": "checkout-api",
+      "metric": "db_pool_capacity",
+      "value": 20,
+      "unit": "connections"
+    },
+    {
+      "incident_id": "inc-001",
+      "timestamp": "2026-08-25T12:04:00Z",
+      "service": "checkout-api",
+      "metric": "request_p95_latency",
+      "value": 2380,
+      "unit": "ms"
+    },
+    {
+      "incident_id": "inc-002",
+      "timestamp": "2026-08-25T13:34:00Z",
+      "service": "fraud-api",
+      "metric": "request_p95_latency",
+      "value": 2310,
+      "unit": "ms"
+    },
+    {
+      "incident_id": "inc-002",
+      "timestamp": "2026-08-25T13:34:00Z",
+      "service": "payment-api",
+      "metric": "authorization_timeout_rate",
+      "value": 0.27,
+      "unit": "ratio"
+    },
+    {
+      "incident_id": "inc-003",
+      "timestamp": "2026-08-25T15:12:00Z",
+      "service": "auth-api",
+      "metric": "login_failure_rate",
+      "value": 0.64,
+      "unit": "ratio"
+    }
+  ],
+  "deployments": [
+    {
+      "incident_id": "inc-001",
+      "deployment_id": "deploy-checkout-180",
+      "service": "checkout-api",
+      "version": "1.8.0",
+      "deployed_at": "2026-08-25T11:42:00Z",
+      "commit_sha": "7c4a12f",
+      "summary": "Reduced database pool capacity from 40 to 20 and lowered acquisition timeout to 500 ms."
+    },
+    {
+      "incident_id": "inc-001",
+      "deployment_id": "deploy-inventory-231",
+      "service": "inventory-api",
+      "version": "2.3.1",
+      "deployed_at": "2026-08-24T18:20:00Z",
+      "commit_sha": "44b8d1c",
+      "summary": "Added inventory response caching."
+    },
+    {
+      "incident_id": "inc-002",
+      "deployment_id": "deploy-payment-520",
+      "service": "payment-api",
+      "version": "5.2.0",
+      "deployed_at": "2026-08-22T09:00:00Z",
+      "commit_sha": "ee10a2d",
+      "summary": "No timeout or dependency configuration changes."
+    },
+    {
+      "incident_id": "inc-003",
+      "deployment_id": "deploy-auth-342",
+      "service": "auth-api",
+      "version": "3.4.2",
+      "deployed_at": "2026-08-25T15:03:00Z",
+      "commit_sha": "9df0a77",
+      "summary": "Moved JWT issuer configuration to the new environment template; production received the staging issuer URL."
+    }
+  ],
+  "runbooks": [
+    {
+      "runbook_id": "rb-db-pool",
+      "title": "Database connection pool exhaustion",
+      "service": "checkout-api",
+      "tags": ["database", "connection", "pool", "latency"],
+      "content": "Confirm active connections equal pool capacity, compare recent deployment configuration, and roll back the pool change after approval."
+    },
+    {
+      "runbook_id": "rb-payment-dependency",
+      "title": "Payment dependency timeout",
+      "service": "payment-api",
+      "tags": ["payment", "timeout", "dependency", "fraud-api"],
+      "content": "Compare payment and downstream latency, enable the approved fallback, and page the dependency owner."
+    },
+    {
+      "runbook_id": "rb-jwt-issuer",
+      "title": "JWT issuer configuration regression",
+      "service": "auth-api",
+      "tags": ["authentication", "jwt", "issuer", "configuration"],
+      "content": "Compare the rejected issuer with the production allowlist and inspect the latest auth-api configuration deployment."
+    },
+    {
+      "runbook_id": "rb-general-latency",
+      "title": "General service latency triage",
+      "service": "platform",
+      "tags": ["latency", "logs", "metrics"],
+      "content": "Check saturation, errors, traffic, and latency before proposing remediation."
+    }
+  ]
+}
+
