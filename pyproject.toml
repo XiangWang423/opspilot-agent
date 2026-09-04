@@ -12,6 +12,9 @@ license = { text = "MIT" }
 authors = [{ name = "Xiang Wang" }]
 dependencies = []
 
+[project.scripts]
+opspilot = "opspilot.cli:main"
+
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
 
@@ -21,4 +24,3 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-

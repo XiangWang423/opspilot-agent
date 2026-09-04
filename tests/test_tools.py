@@ -70,6 +70,33 @@ class ToolRegistryTests(unittest.TestCase):
                 {"incident_id": "inc-001", "limit": -1},
             )
 
+    def test_rejects_placeholder_service_filter(self) -> None:
+        with self.assertRaisesRegex(
+            ToolValidationError, "Argument 'service' must not be one of"
+        ):
+            self.registry.invoke(
+                "search_logs",
+                {"incident_id": "inc-003", "service": "all"},
+            )
+
+    def test_rejects_empty_optional_filter(self) -> None:
+        with self.assertRaisesRegex(
+            ToolValidationError, "Argument 'service' must contain at least 1 character"
+        ):
+            self.registry.invoke(
+                "search_runbooks",
+                {"query": "jwt", "service": ""},
+            )
+
+    def test_rejects_unknown_log_level(self) -> None:
+        with self.assertRaisesRegex(
+            ToolValidationError, "Argument 'level' must be one of"
+        ):
+            self.registry.invoke(
+                "search_logs",
+                {"incident_id": "inc-003", "level": "SEVERE"},
+            )
+
     def test_rejects_unknown_tool(self) -> None:
         with self.assertRaisesRegex(UnknownToolError, "Unknown tool: restart_service"):
             self.registry.invoke("restart_service", {"service": "checkout-api"})
@@ -77,4 +104,3 @@ class ToolRegistryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

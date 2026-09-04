@@ -12,6 +12,7 @@ class ToolCall:
 
     tool_name: str
     arguments: dict[str, Any]
+    call_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,7 @@ class Observation:
     arguments: dict[str, Any]
     output: Any | None = None
     error: str | None = None
+    call_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -39,6 +41,13 @@ class AgentState:
     incident_id: str
     observations: list[Observation] = field(default_factory=list)
     steps: int = 0
+    max_steps: int | None = None
+
+    @property
+    def steps_remaining(self) -> int | None:
+        if self.max_steps is None:
+            return None
+        return max(self.max_steps - self.steps + 1, 0)
 
 
 @dataclass(frozen=True)
@@ -79,7 +88,7 @@ class AgentRunner:
         self.max_identical_tool_calls = max_identical_tool_calls
 
     def run(self, incident_id: str) -> AgentResult:
-        state = AgentState(incident_id=incident_id)
+        state = AgentState(incident_id=incident_id, max_steps=self.max_steps)
         previous_tool_call: ToolCall | None = None
         identical_call_count = 0
 
@@ -120,12 +129,14 @@ class AgentRunner:
                     tool_name=decision.tool_name,
                     arguments=decision.arguments,
                     output=output,
+                    call_id=decision.call_id,
                 )
             except ToolError as exc:
                 observation = Observation(
                     tool_name=decision.tool_name,
                     arguments=decision.arguments,
                     error=f"{type(exc).__name__}: {exc}",
+                    call_id=decision.call_id,
                 )
 
             state.observations.append(observation)

@@ -100,8 +100,20 @@ def build_default_registry(repository: IncidentRepository) -> ToolRegistry:
         return [asdict(row) for row in repository.runbooks(query=query, service=service)]
 
     common_incident_properties = {
-        "incident_id": {"type": "string"},
-        "service": {"type": "string"},
+        "incident_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact incident identifier, for example inc-003.",
+        },
+        "service": {
+            "type": "string",
+            "minLength": 1,
+            "not": {"enum": ["all", "*"]},
+            "description": (
+                "Optional exact service name. Omit this field to search all services; "
+                "never use 'all', '*', or an empty string."
+            ),
+        },
     }
 
     return ToolRegistry(
@@ -113,8 +125,13 @@ def build_default_registry(repository: IncidentRepository) -> ToolRegistry:
                     "type": "object",
                     "properties": {
                         **common_incident_properties,
-                        "level": {"type": "string"},
-                        "limit": {"type": "integer", "minimum": 1}                    },
+                        "level": {
+                            "type": "string",
+                            "enum": ["DEBUG", "INFO", "WARN", "ERROR"],
+                            "description": "Optional exact log severity.",
+                        },
+                        "limit": {"type": "integer", "minimum": 1},
+                    },
                     "required": ["incident_id"],
                     "additionalProperties": False,
                 },
@@ -127,7 +144,15 @@ def build_default_registry(repository: IncidentRepository) -> ToolRegistry:
                     "type": "object",
                     "properties": {
                         **common_incident_properties,
-                        "metric": {"type": "string"},
+                        "metric": {
+                            "type": "string",
+                            "minLength": 1,
+                            "not": {"enum": ["all", "*"]},
+                            "description": (
+                                "Optional exact metric name. Omit this field when unknown "
+                                "to return all incident metrics."
+                            ),
+                        },
                     },
                     "required": ["incident_id"],
                     "additionalProperties": False,
@@ -151,8 +176,12 @@ def build_default_registry(repository: IncidentRepository) -> ToolRegistry:
                 parameters={
                     "type": "object",
                     "properties": {
-                        "query": {"type": "string"},
-                        "service": {"type": "string"},
+                        "query": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "One or more concrete diagnostic keywords.",
+                        },
+                        "service": common_incident_properties["service"],
                     },
                     "required": ["query"],
                     "additionalProperties": False,
@@ -207,6 +236,28 @@ def _validate_arguments(schema: dict[str, Any], arguments: dict[str, Any]) -> No
                 f"Argument '{name}' must be at least {minimum}"
             )
 
+        minimum_length = properties.get(name, {}).get("minLength")
+        if minimum_length is not None and len(value) < minimum_length:
+            noun = "character" if minimum_length == 1 else "characters"
+            raise ToolValidationError(
+                f"Argument '{name}' must contain at least {minimum_length} {noun}"
+            )
+
+        allowed_values = properties.get(name, {}).get("enum")
+        if allowed_values is not None and value not in allowed_values:
+            choices = ", ".join(repr(item) for item in allowed_values)
+            raise ToolValidationError(
+                f"Argument '{name}' must be one of: {choices}"
+            )
+
+        forbidden_values = properties.get(name, {}).get("not", {}).get("enum")
+        if forbidden_values is not None and value in forbidden_values:
+            choices = ", ".join(repr(item) for item in forbidden_values)
+            raise ToolValidationError(
+                f"Argument '{name}' must not be one of: {choices}"
+            )
+
+
 def _duplicates(names: list[str] | Any) -> set[str]:
     seen: set[str] = set()
     duplicates: set[str] = set()
@@ -215,4 +266,3 @@ def _duplicates(names: list[str] | Any) -> set[str]:
             duplicates.add(name)
         seen.add(name)
     return duplicates
-

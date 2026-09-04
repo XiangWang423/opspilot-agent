@@ -9,6 +9,7 @@ from .agent import (
     ToolCall,
 )
 from .fixtures import IncidentRepository
+from .openrouter_policy import OpenRouterChatClient, OpenRouterPolicy
 from .tools import ToolRegistry, build_default_registry
 
 __all__ = [
@@ -18,6 +19,8 @@ __all__ = [
     "FinalDiagnosis",
     "IncidentRepository",
     "Observation",
+    "OpenRouterChatClient",
+    "OpenRouterPolicy",
     "ToolCall",
     "ToolRegistry",
     "build_default_registry",
