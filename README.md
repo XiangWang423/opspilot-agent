@@ -27,6 +27,15 @@ This makes future model and prompt experiments comparable instead of anecdotal.
 - A registry that rejects unknown tools and malformed arguments.
 - Standard-library unit tests with no API key or network access.
 
+## Second milestone: bounded diagnosis loop
+
+- A `Policy` chooses either a structured `ToolCall` or a `FinalDiagnosis`.
+- `AgentRunner` owns execution instead of allowing the policy to run code directly.
+- Every successful or failed tool execution becomes an `Observation` for the next decision.
+- Recoverable tool errors are returned to the policy so it can repair invalid arguments.
+- A total step budget and repeated-call detection stop runaway loops and control cost.
+- Deterministic policies test orchestration without network access or model tokens.
+
 ## Run the tests
 
 ```bash
@@ -44,4 +53,3 @@ Alert -> Triage -> Parallel evidence collection -> Evidence fusion -> Diagnosis
 ```
 
 No production system is modified in the current milestone. All evidence comes from local fixtures.
-
