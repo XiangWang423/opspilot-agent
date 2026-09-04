@@ -42,6 +42,8 @@ This makes future model and prompt experiments comparable instead of anecdotal.
 - Provider `call_id` values are preserved so every tool result is linked to the request that
   produced it.
 - Model response validation rejects malformed tool arguments and invalid final diagnoses.
+- Successfully queried evidence sources are removed from later tool choices to prevent redundant
+  calls, and the final decision is reserved for producing a diagnosis.
 - A command-line entry point assembles the repository, tools, policy, and bounded runner.
 - Offline scripted-client tests cover the complete model -> tool -> observation -> model flow
   without spending API tokens.

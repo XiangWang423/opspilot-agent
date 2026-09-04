@@ -216,6 +216,36 @@ class OpenRouterPolicyTests(unittest.TestCase):
         self.assertEqual(second_messages[-1]["role"], "tool")
         self.assertEqual(second_messages[-1]["tool_call_id"], "call_logs_002")
         self.assertIn("invalid issuer", second_messages[-1]["content"])
+        second_tool_names = {
+            item["function"]["name"] for item in client.requests[1]["tools"]
+        }
+        self.assertNotIn("search_logs", second_tool_names)
+
+    def test_reserves_last_decision_for_final_diagnosis(self) -> None:
+        client = FakeChatClient(
+            {
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": json.dumps(
+                                {
+                                    "root_cause": "production used the staging issuer",
+                                    "confidence": 0.95,
+                                }
+                            ),
+                        }
+                    }
+                ]
+            }
+        )
+        policy = OpenRouterPolicy(client=client, model="test/model")
+        state = AgentState(incident_id="inc-003", steps=4, max_steps=4)
+
+        decision = policy.decide(state, [])
+
+        self.assertIsInstance(decision, FinalDiagnosis)
+        self.assertEqual(client.requests[0]["tool_choice"], "none")
 
     def test_rejects_tool_call_with_invalid_json_arguments(self) -> None:
         client = FakeChatClient(

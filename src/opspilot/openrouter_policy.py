@@ -79,14 +79,16 @@ class OpenRouterPolicy:
     def decide(
         self, state: AgentState, tool_specs: list[dict[str, Any]]
     ) -> ToolCall | FinalDiagnosis:
+        final_decision = state.steps_remaining == 1
+        available_tools = self._available_tools(state, tool_specs)
         payload = {
             "model": self.model,
             "messages": self._messages(state),
             "tools": [
                 {"type": "function", "function": specification}
-                for specification in tool_specs
+                for specification in available_tools
             ],
-            "tool_choice": "auto",
+            "tool_choice": "none" if final_decision else "auto",
             "parallel_tool_calls": False,
             "temperature": 0,
         }
@@ -95,11 +97,30 @@ class OpenRouterPolicy:
         tool_calls = message.get("tool_calls") or []
 
         if tool_calls:
+            if final_decision:
+                raise ModelResponseError(
+                    "Model requested a tool on the reserved final decision"
+                )
             if len(tool_calls) != 1:
                 raise ModelResponseError("Expected at most one tool call")
             return self._tool_call(tool_calls[0])
 
         return self._final_diagnosis(message.get("content"))
+
+    @staticmethod
+    def _available_tools(
+        state: AgentState, tool_specs: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        completed_tools = {
+            observation.tool_name
+            for observation in state.observations
+            if observation.error is None
+        }
+        return [
+            specification
+            for specification in tool_specs
+            if specification.get("name") not in completed_tools
+        ]
 
     def _messages(self, state: AgentState) -> list[dict[str, Any]]:
         messages: list[dict[str, Any]] = [
