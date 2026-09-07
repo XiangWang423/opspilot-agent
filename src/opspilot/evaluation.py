@@ -24,6 +24,8 @@ class CaseEvaluation:
     completed: bool
     correct: bool
     grounded: bool
+    predicted_root_cause: str | None
+    confidence: float | None
     diagnosis_term_recall: float
     evidence_recall: float
     matched_terms: tuple[str, ...]
@@ -92,6 +94,8 @@ def _evaluate_case(
             completed=False,
             correct=False,
             grounded=False,
+            predicted_root_cause=None,
+            confidence=None,
             diagnosis_term_recall=0.0,
             evidence_recall=0.0,
             matched_terms=(),
@@ -121,6 +125,8 @@ def _evaluate_case(
         completed=completed,
         correct=correct,
         grounded=grounded,
+        predicted_root_cause=diagnosis_text or None,
+        confidence=result.diagnosis.confidence if result.diagnosis else None,
         diagnosis_term_recall=term_recall,
         evidence_recall=evidence_recall,
         matched_terms=matched_terms,
@@ -167,15 +173,28 @@ def report_payload(report: EvaluationReport) -> dict[str, object]:
     return {
         "summary": {
             "cases": len(report.cases),
-            "completion_rate": report.completion_rate,
-            "diagnosis_accuracy": report.diagnosis_accuracy,
-            "grounded_accuracy": report.grounded_accuracy,
-            "average_evidence_recall": report.average_evidence_recall,
-            "average_tool_calls": report.average_tool_calls,
-            "average_steps": report.average_steps,
+            "completion_rate": _rounded(report.completion_rate),
+            "diagnosis_accuracy": _rounded(report.diagnosis_accuracy),
+            "grounded_accuracy": _rounded(report.grounded_accuracy),
+            "average_evidence_recall": _rounded(report.average_evidence_recall),
+            "average_tool_calls": _rounded(report.average_tool_calls),
+            "average_steps": _rounded(report.average_steps),
         },
-        "cases": [asdict(case) for case in report.cases],
+        "cases": [_case_payload(case) for case in report.cases],
     }
+
+
+def _case_payload(case: CaseEvaluation) -> dict[str, object]:
+    payload = asdict(case)
+    payload["diagnosis_term_recall"] = _rounded(case.diagnosis_term_recall)
+    payload["evidence_recall"] = _rounded(case.evidence_recall)
+    if case.confidence is not None:
+        payload["confidence"] = _rounded(case.confidence)
+    return payload
+
+
+def _rounded(value: float) -> float:
+    return round(value, 3)
 
 
 def build_parser() -> argparse.ArgumentParser:

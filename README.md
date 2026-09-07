@@ -55,7 +55,7 @@ This makes future model and prompt experiments comparable instead of anecdotal.
 - Every log and metric row has a stable evidence ID that can be compared with fixture truth.
 - Each incident declares concrete diagnosis terms and the evidence records required to support it.
 - The evaluator reports completion rate, diagnosis accuracy, evidence recall, grounded accuracy,
-  average tool calls, and average steps.
+  average tool calls, average steps, and each model-produced diagnosis with confidence.
 - Correctness and grounding are separate: a plausible diagnosis is not counted as grounded unless
   the agent actually retrieved every required evidence record.
 - One provider failure is recorded per case and does not abort the remaining evaluation suite.

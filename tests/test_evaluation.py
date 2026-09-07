@@ -50,10 +50,31 @@ class EvaluationTests(unittest.TestCase):
 
         self.assertTrue(case.correct)
         self.assertTrue(case.grounded)
+        self.assertIn("staging JWT issuer", case.predicted_root_cause)
+        self.assertEqual(case.confidence, 0.96)
         self.assertEqual(case.diagnosis_term_recall, 1.0)
         self.assertEqual(case.evidence_recall, 1.0)
         self.assertEqual(report.grounded_accuracy, 1.0)
         self.assertEqual(report_payload(report)["summary"]["cases"], 1)
+
+    def test_report_rounds_display_metrics(self) -> None:
+        result = AgentResult(
+            status="failed",
+            diagnosis=None,
+            observations=(),
+            steps=1,
+            error="failed",
+        )
+        report = evaluate(
+            self.repository,
+            lambda _: result,
+            incident_ids=["inc-001", "inc-002", "inc-003"],
+        )
+
+        payload = report_payload(report)
+
+        self.assertEqual(payload["summary"]["average_steps"], 1.0)
+        self.assertEqual(payload["cases"][0]["diagnosis_term_recall"], 0.0)
 
     def test_separates_correctness_from_evidence_grounding(self) -> None:
         result = AgentResult(
