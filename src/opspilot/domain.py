@@ -16,6 +16,7 @@ class Incident:
 
 @dataclass(frozen=True)
 class LogEntry:
+    evidence_id: str
     incident_id: str
     timestamp: str
     service: str
@@ -26,6 +27,7 @@ class LogEntry:
 
 @dataclass(frozen=True)
 class MetricSample:
+    evidence_id: str
     incident_id: str
     timestamp: str
     service: str
@@ -52,4 +54,3 @@ class Runbook:
     service: str
     tags: tuple[str, ...]
     content: str
-

@@ -9,6 +9,7 @@
       "ground_truth": {
         "category": "resource_exhaustion",
         "root_cause": "The checkout-api database connection pool was exhausted after version 1.8.0 reduced the pool capacity from 40 to 20.",
+        "diagnosis_terms": ["checkout-api", "database connection pool", "exhausted", "1.8.0", "40", "20"],
         "supporting_evidence": [
           "log-checkout-pool-timeout",
           "metric-checkout-pool-capacity",
@@ -25,6 +26,7 @@
       "ground_truth": {
         "category": "downstream_dependency",
         "root_cause": "fraud-api response latency caused payment-api authorization requests to time out.",
+        "diagnosis_terms": ["fraud-api", "latency", "payment-api", "timeout"],
         "supporting_evidence": [
           "log-payment-fraud-timeout",
           "metric-fraud-latency"
@@ -40,6 +42,7 @@
       "ground_truth": {
         "category": "configuration_regression",
         "root_cause": "Version 3.4.2 configured the production JWT issuer with the staging issuer URL.",
+        "diagnosis_terms": ["3.4.2", "production", "JWT issuer", "staging"],
         "supporting_evidence": [
           "log-auth-invalid-issuer",
           "metric-auth-login-failure",
@@ -50,6 +53,7 @@
   ],
   "logs": [
     {
+      "evidence_id": "log-checkout-pool-timeout",
       "incident_id": "inc-001",
       "timestamp": "2026-08-25T12:04:12Z",
       "service": "checkout-api",
@@ -58,6 +62,7 @@
       "trace_id": "trace-checkout-004"
     },
     {
+      "evidence_id": "log-checkout-queue-depth",
       "incident_id": "inc-001",
       "timestamp": "2026-08-25T12:03:40Z",
       "service": "checkout-api",
@@ -66,6 +71,7 @@
       "trace_id": "trace-checkout-003"
     },
     {
+      "evidence_id": "log-inventory-normal",
       "incident_id": "inc-001",
       "timestamp": "2026-08-25T12:02:05Z",
       "service": "inventory-api",
@@ -74,6 +80,7 @@
       "trace_id": "trace-checkout-002"
     },
     {
+      "evidence_id": "log-payment-fraud-timeout",
       "incident_id": "inc-002",
       "timestamp": "2026-08-25T13:34:18Z",
       "service": "payment-api",
@@ -82,6 +89,7 @@
       "trace_id": "trace-payment-004"
     },
     {
+      "evidence_id": "log-fraud-feature-latency",
       "incident_id": "inc-002",
       "timestamp": "2026-08-25T13:33:11Z",
       "service": "fraud-api",
@@ -90,6 +98,7 @@
       "trace_id": "trace-payment-003"
     },
     {
+      "evidence_id": "log-auth-invalid-issuer",
       "incident_id": "inc-003",
       "timestamp": "2026-08-25T15:12:45Z",
       "service": "auth-api",
@@ -98,6 +107,7 @@
       "trace_id": "trace-auth-004"
     },
     {
+      "evidence_id": "log-auth-version-ready",
       "incident_id": "inc-003",
       "timestamp": "2026-08-25T15:11:02Z",
       "service": "auth-api",
@@ -108,6 +118,7 @@
   ],
   "metrics": [
     {
+      "evidence_id": "metric-checkout-pool-in-use-18",
       "incident_id": "inc-001",
       "timestamp": "2026-08-25T12:00:00Z",
       "service": "checkout-api",
@@ -116,6 +127,7 @@
       "unit": "connections"
     },
     {
+      "evidence_id": "metric-checkout-pool-in-use-20",
       "incident_id": "inc-001",
       "timestamp": "2026-08-25T12:04:00Z",
       "service": "checkout-api",
@@ -124,6 +136,7 @@
       "unit": "connections"
     },
     {
+      "evidence_id": "metric-checkout-pool-capacity",
       "incident_id": "inc-001",
       "timestamp": "2026-08-25T12:04:00Z",
       "service": "checkout-api",
@@ -132,6 +145,7 @@
       "unit": "connections"
     },
     {
+      "evidence_id": "metric-checkout-p95-latency",
       "incident_id": "inc-001",
       "timestamp": "2026-08-25T12:04:00Z",
       "service": "checkout-api",
@@ -140,6 +154,7 @@
       "unit": "ms"
     },
     {
+      "evidence_id": "metric-fraud-latency",
       "incident_id": "inc-002",
       "timestamp": "2026-08-25T13:34:00Z",
       "service": "fraud-api",
@@ -148,6 +163,7 @@
       "unit": "ms"
     },
     {
+      "evidence_id": "metric-payment-timeout-rate",
       "incident_id": "inc-002",
       "timestamp": "2026-08-25T13:34:00Z",
       "service": "payment-api",
@@ -156,6 +172,7 @@
       "unit": "ratio"
     },
     {
+      "evidence_id": "metric-auth-login-failure",
       "incident_id": "inc-003",
       "timestamp": "2026-08-25T15:12:00Z",
       "service": "auth-api",
@@ -233,4 +250,3 @@
     }
   ]
 }
-

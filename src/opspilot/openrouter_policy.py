@@ -165,6 +165,10 @@ class OpenRouterPolicy:
     @staticmethod
     def _task_message(state: AgentState) -> str:
         task = f"Investigate incident {state.incident_id}."
+        if state.context:
+            task += " Incident context: " + json.dumps(
+                state.context, sort_keys=True
+            ) + "."
         if state.max_steps is None or state.steps_remaining is None:
             return task
         return (

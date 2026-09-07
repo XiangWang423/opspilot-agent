@@ -43,9 +43,18 @@ def run_diagnosis(
     max_steps: int,
 ) -> AgentResult:
     repository = IncidentRepository(data_path)
+    incident = repository.incident(incident_id)
     tools = build_default_registry(repository)
     policy = OpenRouterPolicy(client=client, model=model)
-    return AgentRunner(policy, tools, max_steps=max_steps).run(incident_id)
+    context = {
+        "service": incident.service,
+        "started_at": incident.started_at,
+        "alert": incident.alert,
+        "severity": incident.severity,
+    }
+    return AgentRunner(policy, tools, max_steps=max_steps).run(
+        incident_id, context=context
+    )
 
 
 def result_payload(incident_id: str, result: AgentResult) -> dict[str, object]:

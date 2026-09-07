@@ -50,6 +50,12 @@ class IncidentRepository:
                 return incident
         raise KeyError(f"Unknown incident: {incident_id}")
 
+    @property
+    def incident_ids(self) -> tuple[str, ...]:
+        """Stable fixture order for repeatable evaluation runs."""
+
+        return tuple(incident.incident_id for incident in self._incidents)
+
     def logs(
         self,
         incident_id: str,
@@ -112,4 +118,3 @@ class IncidentRepository:
 def _tokens(text: str) -> set[str]:
     normalized = "".join(character.lower() if character.isalnum() else " " for character in text)
     return {token for token in normalized.split() if token}
-

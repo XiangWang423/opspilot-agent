@@ -15,8 +15,10 @@ FIXTURE_PATH = Path(__file__).parents[1] / "data" / "incidents.json"
 class ScriptedChatClient:
     def __init__(self, *responses: dict[str, object]) -> None:
         self.responses = list(responses)
+        self.requests: list[dict[str, object]] = []
 
     def complete(self, payload: dict[str, object]) -> dict[str, object]:
+        self.requests.append(payload)
         return self.responses.pop(0)
 
 
@@ -86,3 +88,7 @@ class CliTests(unittest.TestCase):
         self.assertEqual(payload["status"], "completed")
         self.assertEqual(payload["tool_calls"], 1)
         self.assertEqual(payload["diagnosis"]["confidence"], 0.94)
+        task = client.requests[0]["messages"][1]["content"]
+        self.assertIn("Login failures rose", task)
+        self.assertIn("auth-api", task)
+        self.assertNotIn("ground_truth", task)
