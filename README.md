@@ -4,9 +4,9 @@ OpsPilot is a portfolio-scale incident-response agent. It is designed to diagnos
 service failures from logs, metrics, deployment history, and runbooks before proposing any
 remediation.
 
-The project starts with deterministic incident fixtures and typed, read-only diagnostic tools.
-Later milestones will add a LangGraph workflow, durable checkpoints, human approval for risky
-actions, hybrid retrieval, OpenTelemetry traces, and evaluation-driven fault injection.
+The project combines deterministic incident fixtures, typed read-only tools, a bounded agent loop,
+an OpenRouter policy adapter, and a reproducible evaluation harness. Production-only extensions
+such as durable checkpoints and human approval remain deliberately outside this portfolio MVP.
 
 ## Why start without an LLM?
 
@@ -45,8 +45,20 @@ This makes future model and prompt experiments comparable instead of anecdotal.
 - Successfully queried evidence sources are removed from later tool choices to prevent redundant
   calls, and the final decision is reserved for producing a diagnosis.
 - A command-line entry point assembles the repository, tools, policy, and bounded runner.
+- The runner receives alert, service, severity, and start time, while fixture ground truth is kept
+  outside model context to prevent evaluation leakage.
 - Offline scripted-client tests cover the complete model -> tool -> observation -> model flow
   without spending API tokens.
+
+## Fourth milestone: deterministic evaluation
+
+- Every log and metric row has a stable evidence ID that can be compared with fixture truth.
+- Each incident declares concrete diagnosis terms and the evidence records required to support it.
+- The evaluator reports completion rate, diagnosis accuracy, evidence recall, grounded accuracy,
+  average tool calls, average steps, and each model-produced diagnosis with confidence.
+- Correctness and grounding are separate: a plausible diagnosis is not counted as grounded unless
+  the agent actually retrieved every required evidence record.
+- One provider failure is recorded per case and does not abort the remaining evaluation suite.
 
 ## Run the tests
 
@@ -73,7 +85,21 @@ PYTHONPATH=src python3 -m opspilot.cli inc-003 \
 Each policy decision may make one model API request. The step budget therefore bounds model
 requests as well as runaway loops. Tool execution remains local and read-only.
 
-## Planned architecture
+## Evaluate all fixtures
+
+Evaluation calls the configured model once per agent decision, so start with one incident:
+
+```bash
+PYTHONPATH=src python3 -m opspilot.evaluation \
+  --incident inc-003 \
+  --model openai/gpt-5-nano \
+  --max-steps 6
+```
+
+Remove `--incident inc-003` to evaluate all three fixtures. The scorer is deterministic: it checks
+declared root-cause terms and stable evidence IDs instead of paying a second LLM to judge prose.
+
+## Architecture
 
 ```text
 Alert -> Triage -> Parallel evidence collection -> Evidence fusion -> Diagnosis
@@ -83,4 +109,7 @@ Alert -> Triage -> Parallel evidence collection -> Evidence fusion -> Diagnosis
                                       execute -> verify -> compensate/escalate
 ```
 
-No production system is modified in the current milestone. All evidence comes from local fixtures.
+No production system is modified. All evidence comes from local fixtures, every tool is read-only,
+and every run is bounded. This is the completed portfolio MVP; checkpoints, approval-gated write
+tools, hybrid retrieval, and OpenTelemetry are documented future production extensions rather than
+half-implemented claims.

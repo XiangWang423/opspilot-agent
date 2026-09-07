@@ -119,6 +119,38 @@ class OpenRouterPolicyTests(unittest.TestCase):
         self.assertIn("2 decision(s) remain", task)
         self.assertIn("Reserve a decision for the final diagnosis", task)
 
+    def test_includes_incident_context_without_ground_truth(self) -> None:
+        client = FakeChatClient(
+            {
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": json.dumps(
+                                {"root_cause": "configuration error", "confidence": 0.8}
+                            ),
+                        }
+                    }
+                ]
+            }
+        )
+        policy = OpenRouterPolicy(client=client, model="test/model")
+        state = AgentState(
+            incident_id="inc-003",
+            context={
+                "service": "auth-api",
+                "severity": "SEV-1",
+                "alert": "Login failures rose after deployment.",
+            },
+        )
+
+        policy.decide(state, [])
+
+        task = client.requests[0]["messages"][1]["content"]
+        self.assertIn("auth-api", task)
+        self.assertIn("Login failures", task)
+        self.assertNotIn("ground_truth", task)
+
     def test_converts_json_text_to_final_diagnosis(self) -> None:
         client = FakeChatClient(
             {

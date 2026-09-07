@@ -39,6 +39,7 @@ class AgentState:
     """Mutable investigation state passed back to the policy each step."""
 
     incident_id: str
+    context: dict[str, Any] = field(default_factory=dict)
     observations: list[Observation] = field(default_factory=list)
     steps: int = 0
     max_steps: int | None = None
@@ -87,8 +88,14 @@ class AgentRunner:
         self.max_steps = max_steps
         self.max_identical_tool_calls = max_identical_tool_calls
 
-    def run(self, incident_id: str) -> AgentResult:
-        state = AgentState(incident_id=incident_id, max_steps=self.max_steps)
+    def run(
+        self, incident_id: str, *, context: dict[str, Any] | None = None
+    ) -> AgentResult:
+        state = AgentState(
+            incident_id=incident_id,
+            context=dict(context or {}),
+            max_steps=self.max_steps,
+        )
         previous_tool_call: ToolCall | None = None
         identical_call_count = 0
 
